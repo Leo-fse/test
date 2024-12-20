@@ -17,8 +17,8 @@ class ColoredFormatter(logging.Formatter):
     def format(self, record):
         # 色の定義
         log_colors = {
-            "DEBUG": Fore.GREEN,
-            "INFO": Fore.BLACK,
+            "DEBUG": Fore.BLACK,
+            "INFO": Fore.GREEN,
             "WARNING": Fore.YELLOW,
             "ERROR": Fore.RED,
             "CRITICAL": Fore.RED,
@@ -31,7 +31,7 @@ class ColoredFormatter(logging.Formatter):
         # 日時部分に色を付ける
         log_time = f"{log_color}{self.formatTime(record)}{reset_color}"
         # レベル名部分に色を付ける
-        log_level = f"{log_color}{record.levelname}{reset_color}"
+        log_level = f"{log_color}{record.levelname.ljust(8)}{reset_color}"
         # メッセージ部分に色をつける
         log_message = f"{log_color}{ record.getMessage()}{reset_color}"
 
@@ -88,11 +88,9 @@ def log_decorator(logger_setup):
                 start_time = time.time()
                 result = func(*args, **kwargs)
                 end_time = time.time()
-                logger_setup.logger.info(
-                    f"処理終了 {func.__name__} の実行時間: {end_time - start_time:.2f} seconds"
-                )
+                logger_setup.logger.info(f"処理終了 {func.__name__} の実行時間: {end_time - start_time:.2f} seconds")
                 return result
-            except Exception as e:
+            except Exception:
                 logger_setup.logger.error(f"ERROR in {func.__name__} : {traceback.format_exc()}")
                 raise
 
