@@ -13,6 +13,7 @@ init(autoreset=True)
 
 class ColoredFormatter(logging.Formatter):
     def format(self, record):
+        # 色の定義
         log_colors = {
             "DEBUG": Fore.CYAN,
             "INFO": Fore.GREEN,
@@ -20,9 +21,21 @@ class ColoredFormatter(logging.Formatter):
             "ERROR": Fore.RED,
             "CRITICAL": Fore.RED,
         }
+        
+        # 日時、レベル名、メッセージに色を適用
         log_color = log_colors.get(record.levelname, Fore.RESET)
-        record.levelname = f"{log_color}{record.levelname}{Style.RESET_ALL}"
-        return super().format(record)
+        reset_color = Style.RESET_ALL
+        
+        # 日時部分に色を付ける
+        log_time = f"{log_color}{self.formatTime(record)}{reset_color}"
+        # レベル名部分に色を付ける
+        log_level = f"{log_color}{record.levelname}{reset_color}"
+        # メッセージ部分に色をつける
+        log_message =f"{log_color}{ record.getMessage()}{reset_color}"
+
+        # フォーマットを日時 - レベル名 - メッセージ の形にする
+        formatted_message = f"{log_time} - {log_level} - {log_message}"
+        return formatted_message
 
 class LoggerSetup:
     def __init__(self, log_dir: Path):
@@ -48,7 +61,7 @@ class LoggerSetup:
             for file_to_delete in log_files[10:]:
                 os.remove(file_to_delete)
 
-        file_handler = logging.FileHandler(log_file_path)
+        file_handler = logging.FileHandler(log_file_path, encoding='utf-8-sig')
         file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
         self.logger.addHandler(file_handler)
         self.file_handler = file_handler
@@ -81,7 +94,7 @@ def log_decorator(logger_setup):
     return decorator
 
 def remove_color_codes(log_file_path):
-    with open(log_file_path, "r") as file:
+    with open(log_file_path, "r", encoding="utf-8") as file:
         log_content = file.read()
 
     # カラーコードを削除する正規表現パターン
@@ -89,11 +102,10 @@ def remove_color_codes(log_file_path):
     # カラーコードを削除
     log_content = re.sub(color_code_pattern, "", log_content)
 
-    with open(log_file_path, "w") as file:
+    with open(log_file_path, "w", encoding="utf-8") as file:
         file.write(log_content)
 
 # ログの設定と初期化
-# LOGS_DIR = Path('./logs')
 logger_setup = LoggerSetup(LOGS_DIR)
 logger = logger_setup.get_logger()
 
