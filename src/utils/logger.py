@@ -4,7 +4,6 @@ import os
 import re
 import time
 import traceback
-
 from colorama import Fore, Style, init
 from pathlib import Path
 from settings import LOGS_DIR
@@ -12,56 +11,56 @@ from settings import LOGS_DIR
 init(autoreset=True)
 
 class ColoredFormatter(logging.Formatter):
-    def format(self, record):
-        # 色の定義
-        log_colors = {
+    def __init__(self, fmt=None, datefmt=None):
+        super().__init__(fmt, datefmt)
+        self.log_colors = {
             "DEBUG": Fore.CYAN,
             "INFO": Fore.GREEN,
             "WARNING": Fore.YELLOW,
             "ERROR": Fore.RED,
             "CRITICAL": Fore.RED,
         }
-        
-        # 日時、レベル名、メッセージに色を適用
-        log_color = log_colors.get(record.levelname, Fore.RESET)
-        reset_color = Style.RESET_ALL
-        
-        # 日時部分に色を付ける
-        log_time = f"{log_color}{self.formatTime(record)}{reset_color}"
-        # レベル名部分に色を付ける
-        log_level = f"{log_color}{record.levelname}{reset_color}"
-        # メッセージ部分に色をつける
-        log_message =f"{log_color}{ record.getMessage()}{reset_color}"
 
-        # フォーマットを日時 - レベル名 - メッセージ の形にする
-        formatted_message = f"{log_time} - {log_level} - {log_message}"
-        return formatted_message
+    def _colorize(self, text, color):
+        return f"{color}{text}{Style.RESET_ALL}"
+
+    def format(self, record):
+        log_color = self.log_colors.get(record.levelname, Fore.RESET)
+        record.levelname = self._colorize(record.levelname, log_color)
+        record.msg = self._colorize(record.getMessage(), log_color)
+        record.asctime = self._colorize(self.formatTime(record), log_color)
+        return super().format(record)
 
 class LoggerSetup:
     def __init__(self, log_dir: Path):
         self.log_dir = log_dir
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
+
+        log_level = os.getenv("LOG_LEVEL", "DEBUG").upper()
+        self.logger.setLevel(getattr(logging, log_level, logging.DEBUG))
+
         self._setup_console_handler()
         self._setup_file_handler()
 
     def _setup_console_handler(self):
-        # コンソール用のハンドラーを設定
         console_handler = logging.StreamHandler()
         console_handler.setFormatter(ColoredFormatter("%(asctime)s - %(levelname)s - %(message)s"))
         self.logger.addHandler(console_handler)
 
     def _setup_file_handler(self):
-        # ログファイルのパスを設定
         log_file_path = self.log_dir / f"log_{time.strftime('%Y%m%d_%H%M%S')}.log"
-        
-        # ログファイルの履歴を10回分残すために、古いログを削除する
-        log_files = sorted(self.log_dir.glob("log_*.log"), key=os.path.getctime, reverse=True)
+
+        log_files = sorted(
+            self.log_dir.glob("log_*.log"), key=lambda f: f.stat().st_ctime, reverse=True
+        )
         if len(log_files) > 10:
             for file_to_delete in log_files[10:]:
-                os.remove(file_to_delete)
+                try:
+                    os.remove(file_to_delete)
+                except OSError as e:
+                    self.logger.warning(f"Failed to delete old log file {file_to_delete}: {e}")
 
-        file_handler = logging.FileHandler(log_file_path, encoding='utf-8-sig')
+        file_handler = logging.FileHandler(log_file_path, encoding='utf-8')
         file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
         self.logger.addHandler(file_handler)
         self.file_handler = file_handler
@@ -73,12 +72,13 @@ class LoggerSetup:
     def get_file_handler(self):
         return self.file_handler
 
-def log_decorator(logger_setup):
+def log_decorator(logger_setup, custom_message=None):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                logger_setup.logger.info(f"START   {func.__module__}.{func.__name__} args: {args}, kwargs: {kwargs}")
+                message = custom_message or f"START {func.__module__}.{func.__name__}"
+                logger_setup.logger.info(f"{message} args: {args}, kwargs: {kwargs}")
                 start_time = time.time()
                 result = func(*args, **kwargs)
                 end_time = time.time()
@@ -88,7 +88,6 @@ def log_decorator(logger_setup):
                 logger_setup.logger.error(f"ERROR in {func.__name__} : {traceback.format_exc()}")
                 raise
             finally:
-                # カラーコードを削除
                 remove_color_codes(logger_setup.get_file_handler().stream.name)
         return wrapper
     return decorator
@@ -109,8 +108,6 @@ def remove_color_codes(log_file_path):
 logger_setup = LoggerSetup(LOGS_DIR)
 logger = logger_setup.get_logger()
 
-
-
 if __name__ == "__main__":
     @log_decorator(logger_setup)
     def example_function(a, b):
@@ -118,5 +115,5 @@ if __name__ == "__main__":
         result = a + b
         logger.debug(f"Result of adding {a} and {b}: {result}")
         return result
-    
+
     example_function(5, 3)
