@@ -18,14 +18,8 @@
         "coverage.xml": true,
         ".pytest_cache": true
     },
-    "ruff.configuration": "ruff",
-    "ruff.nativeServer": true,
-    "ruff.lineLength": 100,
-    "ruff.lint.select": [
-        "C",
-        "E",
-        "F",
-        "W"
+    "ruff.format.args": [
+        "--config=pyproject.toml"
     ],
     "[python]": {
         "editor.formatOnSave": true,
