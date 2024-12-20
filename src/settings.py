@@ -1,6 +1,6 @@
-from pathlib import Path
+import argparse
 from configparser import ConfigParser
-
+from pathlib import Path
 
 
 def ensure_dir_exists(directory: Path) -> Path:
@@ -8,11 +8,18 @@ def ensure_dir_exists(directory: Path) -> Path:
     directory.mkdir(parents=True, exist_ok=True)
     return directory
 
+
 def read_config(config_file: Path) -> ConfigParser:
     """指定された設定ファイルを読み込んでConfigParserオブジェクトを返す"""
     config = ConfigParser()
     config.read(config_file)
     return config
+
+
+parser = argparse.ArgumentParser(description="Run the module example script.")
+parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+args = parser.parse_args()
+debug = args.debug
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
