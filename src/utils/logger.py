@@ -25,11 +25,24 @@ class ColoredFormatter(logging.Formatter):
         return f"{color}{text}{Style.RESET_ALL}"
 
     def format(self, record):
-        log_color = self.log_colors.get(record.levelname, Fore.RESET)
-        record.levelname = self._colorize(record.levelname, log_color)
-        record.msg = self._colorize(record.getMessage(), log_color)
-        record.asctime = self._colorize(self.formatTime(record), log_color)
-        return super().format(record)
+        # 元のログデータを壊さないようにコピーを使う
+        record_copy = logging.LogRecord(
+            name=record.name,
+            level=record.levelno,
+            pathname=record.pathname,
+            lineno=record.lineno,
+            msg=record.msg,
+            args=record.args,
+            exc_info=record.exc_info,
+            func=record.funcName,
+            sinfo=getattr(record, "sinfo", None)
+        )
+        # カラーコードを適用
+        log_color = self.log_colors.get(record_copy.levelname, Fore.RESET)
+        record_copy.levelname = self._colorize(record_copy.levelname, log_color)
+        record_copy.msg = self._colorize(record_copy.getMessage(), log_color)
+        record_copy.asctime = self._colorize(self.formatTime(record_copy), log_color)
+        return super().format(record_copy)
 
 class LoggerSetup:
     def __init__(self, log_dir: Path):
@@ -87,22 +100,22 @@ def log_decorator(logger_setup, custom_message=None):
             except Exception as e:
                 logger_setup.logger.error(f"ERROR in {func.__name__} : {traceback.format_exc()}")
                 raise
-            finally:
-                remove_color_codes(logger_setup.get_file_handler().stream.name)
+            # finally:
+            #     remove_color_codes(logger_setup.get_file_handler().stream.name)
         return wrapper
     return decorator
 
-def remove_color_codes(log_file_path):
-    with open(log_file_path, "r", encoding="utf-8") as file:
-        log_content = file.read()
+# def remove_color_codes(log_file_path):
+#     with open(log_file_path, "r", encoding="utf-8") as file:
+#         log_content = file.read()
 
-    # カラーコードを削除する正規表現パターン
-    color_code_pattern = re.compile(r"\x1b\[\d+m")
-    # カラーコードを削除
-    log_content = re.sub(color_code_pattern, "", log_content)
+#     # カラーコードを削除する正規表現パターン
+#     color_code_pattern = re.compile(r"\x1b\[\d+m")
+#     # カラーコードを削除
+#     log_content = re.sub(color_code_pattern, "", log_content)
 
-    with open(log_file_path, "w", encoding="utf-8") as file:
-        file.write(log_content)
+#     with open(log_file_path, "w", encoding="utf-8") as file:
+#         file.write(log_content)
 
 # ログの設定と初期化
 logger_setup = LoggerSetup(LOGS_DIR)
