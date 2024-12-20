@@ -21,7 +21,8 @@ class ColoredFormatter(logging.Formatter):
             "ERROR": Fore.RED,
             "CRITICAL": Fore.RED,
         }
-        
+
+    
         # 日時、レベル名、メッセージに色を適用
         log_color = log_colors.get(record.levelname, Fore.RESET)
         reset_color = Style.RESET_ALL
@@ -87,23 +88,10 @@ def log_decorator(logger_setup):
             except Exception as e:
                 logger_setup.logger.error(f"ERROR in {func.__name__} : {traceback.format_exc()}")
                 raise
-            finally:
-                # カラーコードを削除
-                remove_color_codes(logger_setup.get_file_handler().stream.name)
         return wrapper
     return decorator
 
-def remove_color_codes(log_file_path):
-    with open(log_file_path, "r", encoding="utf-8") as file:
-        log_content = file.read()
 
-    # カラーコードを削除する正規表現パターン
-    color_code_pattern = re.compile(r"\x1b\[\d+m")
-    # カラーコードを削除
-    log_content = re.sub(color_code_pattern, "", log_content)
-
-    with open(log_file_path, "w", encoding="utf-8") as file:
-        file.write(log_content)
 
 # ログの設定と初期化
 logger_setup = LoggerSetup(LOGS_DIR)
