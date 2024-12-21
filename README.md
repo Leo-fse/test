@@ -20,10 +20,10 @@
 ## フォルダ構成
 フォルダ構成は以下の通りです。　
 ```
-Graph/
+Project/
 ├── src/
 │   ├── __init__.py
-│   ├── main.py
+│   ├── __main__.py
 │   ├── settings.py
 │   ├── libs/
 │   │   ├── __init__.py

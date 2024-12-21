@@ -40,22 +40,22 @@ class ColoredFormatter(logging.Formatter):
         return formatted_message
 
 
-def log_decorator(logger_setup):
+def log_decorator(logger):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                logger_setup.logger.debug(f"処理開始   {func.__module__}.{func.__name__} ")
+                logger.debug(f"処理開始   {func.__module__}.{func.__name__} ")
                 start_time = time.time()
                 result = func(*args, **kwargs)
                 end_time = time.time()
-                logger_setup.logger.debug(
+                logger.debug(
                     f"処理終了 {func.__module__}.{func.__name__} の実行時間:"
                     f" {end_time - start_time:.2f} seconds"
                 )
                 return result
             except Exception:
-                logger_setup.logger.error(
+                logger.logger.error(
                     f"ERROR in {func.__module__}.{func.__name__} : {traceback.format_exc()}, "
                     f"args: {args}, kwargs: {kwargs}"
                 )
@@ -110,7 +110,7 @@ logger = logger_setup.get_logger()
 
 if __name__ == "__main__":
 
-    @log_decorator(logger_setup)
+    @log_decorator(logger)
     def example_function(a, b):
         logger.info("This is an example function.")
         result = a + b
@@ -118,3 +118,15 @@ if __name__ == "__main__":
         return result
 
     example_function(5, 3)
+    print("#" * 50)
+    logger.debug("This is a debug message.")
+    logger.info("This is an info message.")
+    logger.warning("This is a warning message.")
+    logger.error("This is an error message.")
+    logger.critical("This is a critical message.")
+    print("#" * 50)
+    try:
+        raise ValueError("This is a sample ValueError.")
+    except ValueError as e:
+        logger.exception(f"{e}\ntraceback: {traceback.format_exc()}")
+    print("#" * 50)

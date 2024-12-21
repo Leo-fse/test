@@ -2,10 +2,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "main.py",
+            "name": "Module",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/main.py",
+            "module": "src",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "env": {
@@ -13,14 +13,14 @@
             }
         },
         {
-            "name": "現在のファイル",
+            "name": "Current file",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "env": {
-                "PYTHONPATH": "${workspaceFolder}/src"
+                "PYTHONPATH": "${workspaceFolder}"
             }
         }
     ]

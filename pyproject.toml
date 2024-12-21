@@ -3,7 +3,7 @@ exclude = [
     ".venv",
     ".ruff_cache"
 ]
-line-length = 119
+line-length = 100
 indent-width = 4
 
 [tool.ruff.lint]
