@@ -40,6 +40,32 @@ class ColoredFormatter(logging.Formatter):
         return formatted_message
 
 
+def log_decorator(logger_setup):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                logger_setup.logger.debug(f"処理開始   {func.__module__}.{func.__name__} ")
+                start_time = time.time()
+                result = func(*args, **kwargs)
+                end_time = time.time()
+                logger_setup.logger.debug(
+                    f"処理終了 {func.__module__}.{func.__name__} の実行時間:"
+                    f" {end_time - start_time:.2f} seconds"
+                )
+                return result
+            except Exception:
+                logger_setup.logger.error(
+                    f"ERROR in {func.__module__}.{func.__name__} : {traceback.format_exc()}, "
+                    f"args: {args}, kwargs: {kwargs}"
+                )
+                raise
+
+        return wrapper
+
+    return decorator
+
+
 class LoggerSetup:
     def __init__(self, log_dir: Path):
         self.log_dir = log_dir
@@ -75,32 +101,6 @@ class LoggerSetup:
 
     def get_file_handler(self):
         return self.file_handler
-
-
-def log_decorator(logger_setup):
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                logger_setup.logger.debug(f"処理開始   {func.__module__}.{func.__name__} ")
-                start_time = time.time()
-                result = func(*args, **kwargs)
-                end_time = time.time()
-                logger_setup.logger.debug(
-                    f"処理終了 {func.__module__}.{func.__name__} の実行時間:"
-                    f" {end_time - start_time:.2f} seconds"
-                )
-                return result
-            except Exception:
-                logger_setup.logger.error(
-                    f"ERROR in {func.__module__}.{func.__name__} : {traceback.format_exc()}, "
-                    f"args: {args}, kwargs: {kwargs}"
-                )
-                raise
-
-        return wrapper
-
-    return decorator
 
 
 # ログの設定と初期化
