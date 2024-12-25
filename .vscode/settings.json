@@ -5,7 +5,7 @@
     "workbench.iconTheme": "material-icon-theme",
     "workbench.productIconTheme": "IntelliJ",
     "editor.fontFamily": "'UDEV Gothic 35JPDOC'",
-    "editor.fontSize": 16,
+    "editor.fontSize": 13,
     // Dark Theme
     // "workbench.colorTheme": "Atom One Dark",
     // "workbench.colorTheme": "Darcula GoLand",

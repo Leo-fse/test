@@ -1,3 +1,11 @@
 bokeh
+polars
+fastexcel
+pyarrow
+numpy
+pandas
+openpyxl
+duckdb
+pydantic
 
 colorama
